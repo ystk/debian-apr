@@ -1,3 +1,18 @@
+apr (1.4.2-6+squeeze2) stable-security; urgency=low
+
+  * Fix regression introduced by fix for CVE-2011-0419:
+    apr_fnmatch may consume 100% CPU. CVE-2011-1928
+    Closes: #627182
+
+ -- Stefan Fritsch <sf@debian.org>  Thu, 19 May 2011 07:49:05 +0200
+
+apr (1.4.2-6+squeeze1) stable-security; urgency=high
+
+  * Fix DoS in apr_fnmatch (CVE-2011-0419) which can be exploited via
+    Apache HTTPD's mod_autoindex.
+
+ -- Stefan Fritsch <sf@debian.org>  Fri, 13 May 2011 23:52:15 +0200
+
 apr (1.4.2-6) unstable; urgency=low
 
   * Also disable robust pthread mutexes on alpha, to fix hang in the test

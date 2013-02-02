@@ -8,3 +8,5 @@
 025_GNU_SOURCE_earlier.dpatch
 026_omit_extra_libs.dpatch
 027_apr_socket_addr_get_lifetime.dpatch
+028_fnmatch_CVE-2011-0419.dpatch
+029_fnmatch_CVE-2011-1928.dpatch
