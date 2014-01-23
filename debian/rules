@@ -3,9 +3,6 @@
 # Turn on VERBOSE output
 #export DH_VERBOSE=1
 
-#enable dpatch
-include /usr/share/dpatch/dpatch.make
-
 # These are used for cross-compiling and for saving the configure script
 # # from having to guess our platform (since we know it already)
 DEB_HOST_GNU_TYPE    ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
@@ -21,18 +18,14 @@ CFLAGS := $(CFLAGS) -pipe -Wall -g
 H_CFLAGS := -Wformat -Wformat-security -D_FORTIFY_SOURCE=2 -fstack-protector
 H_LDFLAGS := -Wl,-z,relro
 
-# API to min kernel map: 
-# 2.6.27: dup3, SOCK_CLOEXEC, epoll_create1
-# 2.6.28: accept4
-CONFFLAGS += ac_cv_prog_AWK=mawk apr_cv_sctp=no \
-	apr_cv_sock_cloexec=no \
-	apr_cv_epoll_create1=no \
-	apr_cv_dup3=no \
-	apr_cv_accept4=no
+CONFFLAGS += ac_cv_prog_AWK=mawk apr_cv_sctp=no
 
-# apr_cv_mutex_robust_shared causes hangs in procmutex test on armel and alpha
+# apr_cv_mutex_robust_shared causes hangs in procmutex test on arm(el|hf) and alpha
 # let's just disable this for squeeze
 ifneq (,$(findstring armel,$(DEB_BUILD_ARCH)))
+  CONFFLAGS += apr_cv_mutex_robust_shared=no
+endif
+ifneq (,$(findstring armhf,$(DEB_BUILD_ARCH)))
   CONFFLAGS += apr_cv_mutex_robust_shared=no
 endif
 ifneq (,$(findstring alpha,$(DEB_BUILD_ARCH)))
@@ -66,21 +59,16 @@ else
 	TEST_TARGET =
 endif
 
-# disable tests on hurd until they are fixed (#530286)
-ifeq (hurd, $(DEB_BUILD_ARCH_OS))
-	TEST_TARGET =
-endif
-
 SHELL=/bin/bash
 
-$(BUILDDIR)/config.status: patch-stamp
+$(BUILDDIR)/config.status:
 	dh_testdir
 	mkdir -p $(BUILDDIR)/docs
 	./buildconf
 	# we need to force the use of bash here. Otherwise, if apr is built with
 	# /bin/sh -> /bin/bash, the resulting libtool will not work on systems
 	# where /bin/sh -> /bin/dash
-	cd $(BUILDDIR) && CFLAGS="$(CFLAGS)" CPPFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS)" $(CONFFLAGS) CONFIG_SHELL=/bin/bash /bin/bash ../configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --enable-layout=Debian --includedir=\$${prefix}/usr/include/apr-1.0 --with-installbuilddir=\$${prefix}/usr/share/apr-1.0/build  --enable-nonportable-atomics
+	cd $(BUILDDIR) && CFLAGS="$(CFLAGS)" CPPFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS)" $(CONFFLAGS) CONFIG_SHELL=/bin/bash /bin/bash ../configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --enable-layout=Debian --includedir=\$${prefix}/usr/include/apr-1.0 --with-installbuilddir=\$${prefix}/usr/share/apr-1.0/build  --enable-nonportable-atomics --enable-allocator-uses-mmap
 	# Determine whether upstream's configure gives the same definition of apr_ino_t as we had until 1.2.11-1
 	rm -f debian/ino_t_test
 	gcc -I$(CURDIR)/include -I$(BUILDDIR)/include `$(BUILDDIR)/apr-1-config --cppflags` -o debian/ino_t_test debian/ino_t_test.c
@@ -105,7 +93,9 @@ ifeq (linux, $(DEB_BUILD_ARCH_OS))
 	fi
 endif
 
-build: patch-stamp build-stamp
+build: build-arch build-indep
+build-arch: build-stamp
+build-indep: build-stamp
 
 build-stamp: $(BUILDDIR)/config.status
 	dh_testdir
@@ -115,7 +105,7 @@ build-stamp: $(BUILDDIR)/config.status
 
 	touch $@
 
-clean: unpatch
+clean:
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp test-stamp debian/ino_t_test
@@ -144,10 +134,11 @@ test-stamp: build
 install: build $(TEST_TARGET)
 	dh_testdir
 	dh_testroot
-	dh_clean -k
+	dh_prep
 	dh_installdirs -a
 
 	$(MAKE) -C $(BUILDDIR) install DESTDIR=$(CURDIR)/debian/tmp
+	perl -p -i -e "s,^dependency_libs=.*,dependency_libs=''," $(CURDIR)/debian/tmp/usr/lib/libapr-1.la
 
 binary-indep: build install
 
