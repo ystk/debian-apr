@@ -1,3 +1,10 @@
+apr (1.4.6-3+deb7u1) stable; urgency=low
+
+  * Don't override CFLAGS and LDFLAGS during build. This fixes the debug
+    information being useless. Closes: #703466
+
+ -- Stefan Fritsch <sf@debian.org>  Wed, 03 Jul 2013 11:33:06 +0200
+
 apr (1.4.6-3) unstable; urgency=low
 
   * Fix some issues with resolving loopback addresses of a protocol family

@@ -68,7 +68,7 @@ $(BUILDDIR)/config.status:
 	# we need to force the use of bash here. Otherwise, if apr is built with
 	# /bin/sh -> /bin/bash, the resulting libtool will not work on systems
 	# where /bin/sh -> /bin/dash
-	cd $(BUILDDIR) && CFLAGS="$(CFLAGS)" CPPFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS)" $(CONFFLAGS) CONFIG_SHELL=/bin/bash /bin/bash ../configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --enable-layout=Debian --includedir=\$${prefix}/usr/include/apr-1.0 --with-installbuilddir=\$${prefix}/usr/share/apr-1.0/build  --enable-nonportable-atomics --enable-allocator-uses-mmap
+	cd $(BUILDDIR) && $(CONFFLAGS) CONFIG_SHELL=/bin/bash /bin/bash ../configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --enable-layout=Debian --includedir=\$${prefix}/usr/include/apr-1.0 --with-installbuilddir=\$${prefix}/usr/share/apr-1.0/build  --enable-nonportable-atomics --enable-allocator-uses-mmap
 	# Determine whether upstream's configure gives the same definition of apr_ino_t as we had until 1.2.11-1
 	rm -f debian/ino_t_test
 	gcc -I$(CURDIR)/include -I$(BUILDDIR)/include `$(BUILDDIR)/apr-1-config --cppflags` -o debian/ino_t_test debian/ino_t_test.c
@@ -100,7 +100,7 @@ build-indep: build-stamp
 build-stamp: $(BUILDDIR)/config.status
 	dh_testdir
 
-	$(MAKE) -C $(BUILDDIR) CFLAGS="$(H_CFLAGS)" LDFLAGS="$(H_LDFLAGS)"
+	$(MAKE) -C $(BUILDDIR) CFLAGS="$(H_CFLAGS) $(CFLAGS)" LDFLAGS="$(H_LDFLAGS) $(LDFLAGS)"
 	$(MAKE) -C $(BUILDDIR) dox
 
 	touch $@
@@ -125,7 +125,7 @@ IGNORE_TESTSOCK = $(shell IGN=false; \
 
 test-stamp: build
 	dh_testdir
-	$(MAKE) -C $(BUILDDIR)/test all CFLAGS="$(H_CFLAGS)" LDFLAGS="$(H_LDFLAGS)"
+	$(MAKE) -C $(BUILDDIR)/test all CFLAGS="$(H_CFLAGS) $(CFLAGS)" LDFLAGS="$(H_LDFLAGS) $(LDFLAGS)"
 	cd $(BUILDDIR)/test && ./testall -v testsockets testsock || $(IGNORE_TESTSOCK)
 	cd $(BUILDDIR)/test && ( ulimit -S -s 8192 ; ./testall -v testatomic)
 	cd $(BUILDDIR)/test && ./testall -v -x testsockets testsock testatomic
