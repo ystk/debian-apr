@@ -5,5 +5,5 @@ hurd_path_max.patch
 fix_doxygen.patch
 omit_extra_libs.patch
 hurd_shm_flock.patch
-debug-kfreebsd-issues.patch
-updates-from-1.4.x-branch.patch
+dont_override_external_buildflags
+buildfix_r1589984
